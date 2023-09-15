@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import { ECDSA } from "solady/src/utils/ECDSA.sol";
 
-bytes4 constant EIP1271_MAGIC_VALUE = 0x20c13b0b;
+bytes4 constant EIP1271_MAGIC_VALUE = 0x1626ba7e;
 
 error InvalidSignature();
 
