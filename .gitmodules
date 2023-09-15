@@ -8,3 +8,6 @@
 [submodule "lib/openzeppelin"]
 	path = lib/openzeppelin
 	url = https://github.com/zeroknots/openzeppelin
+[submodule "lib/solady"]
+	path = lib/solady
+	url = https://github.com/Vectorized/solady
