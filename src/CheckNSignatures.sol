@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import { ECDSA } from "solady/src/utils/ECDSA.sol";
+import { ECDSA } from "solady/utils/ECDSA.sol";
 
 bytes4 constant EIP1271_MAGIC_VALUE = 0x1626ba7e;
 
@@ -118,18 +118,13 @@ library CheckSignatures {
     }
 }
 
-contract ISignatureValidatorConstants {
-    // bytes4(keccak256("isValidSignature(bytes32,bytes)")
-    bytes4 internal constant EIP1271_MAGIC_VALUE = 0x20c13b0b;
-}
-
-abstract contract ISignatureValidator is ISignatureValidatorConstants {
+abstract contract ISignatureValidator {
     /**
      * @dev Should return whether the signature provided is valid for the provided data
      * @param _dataHash Arbitrary length data signed on behalf of address(this)
      * @param _signature Signature byte array associated with _data
      *
-     * MUST return the bytes4 magic value 0x20c13b0b when function passes.
+     * MUST return the bytes4 magic value when function passes.
      * MUST NOT modify state (using STATICCALL for solc < 0.5, view modifier for solc > 0.5)
      * MUST allow external calls
      */
