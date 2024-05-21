@@ -4,7 +4,24 @@
 
 ## Using the library
 
-todo
+In a contract, you can use the `CheckNSignatures` library to verify multiple signatures:
+
+```solidity
+contract Example {
+    using CheckSignatures for bytes32;
+
+   function verify(bytes32 hash, bytes memory signatures) external view returns (bool) {
+        // Determine the number of required signatures
+        uint256 requiredSignatures = 2;
+
+        // Recover the signers
+        address[] memory recoveredSigners = hash.recoverNSignatures(signatures, requiredSignatures);
+
+        // Check if the signers are the expected ones
+        // ...
+    }
+}
+```
 
 ## Using this repo
 
