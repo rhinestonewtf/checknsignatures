@@ -40,7 +40,7 @@
   "homepage": "https://github.com/rhinestonewtf/checknsignatures#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rhinestonewtf/checknsignatures.git"
+    "url": "git+https://github.com/rhinestonewtf/checknsignatures.git"
   },
   "bugs": {
     "url": "https://github.com/rhinestonewtf/checknsignatures/issues"
