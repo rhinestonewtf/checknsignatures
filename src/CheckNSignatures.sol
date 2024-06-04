@@ -3,15 +3,30 @@ pragma solidity ^0.8.19;
 
 import { ECDSA } from "solady/utils/ECDSA.sol";
 
+// EIP1271 magic value
 bytes4 constant EIP1271_MAGIC_VALUE = 0x1626ba7e;
 
 error InvalidSignature();
-
 error WrongContractSignatureFormat(uint256 s, uint256 contractSignatureLen, uint256 signaturesLen);
 error WrongContractSignature(bytes contractSignature);
 error WrongSignature(bytes signature);
 
+/**
+ * @title CheckSignatures
+ * @dev Library for recovering n signatures
+ * @author Rhinestone
+ * @notice This library is based on the Gnosis Safe signature recovery library
+ */
 library CheckSignatures {
+    /**
+     * Recover n signatures from a data hash
+     *
+     * @param dataHash The hash of the data
+     * @param signatures The concatenated signatures
+     * @param requiredSignatures The number of signatures required
+     *
+     * @return recoveredSigners The recovered signers
+     */
     function recoverNSignatures(
         bytes32 dataHash,
         bytes memory signatures,
