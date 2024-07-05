@@ -56,7 +56,7 @@ library CheckSignatures {
                 // the signatures bytes
                 // Here we check that the pointer is not pointing inside the part that is being
                 // processed
-                if (uint256(s) < 65) {
+                if (uint256(s) < 65 * requiredSignatures) {
                     revert WrongContractSignatureFormat(uint256(s), 0, 0);
                 }
 
