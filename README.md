@@ -7,6 +7,8 @@
 In a contract, you can use the `CheckNSignatures` library to verify multiple signatures:
 
 ```solidity
+import { CheckSignatures } from "checknsignatures/CheckNSignatures.sol";
+
 contract Example {
     using CheckSignatures for bytes32;
 
