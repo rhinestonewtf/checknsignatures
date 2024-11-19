@@ -63,8 +63,9 @@ library CheckSignatures {
                 _signer = ECDSA.tryRecover({ hash: dataHash, v: v, r: r, s: s });
             }
             if (_signer != address(0)) {
-                recoveredSigners[validSigCount++] = _signer;
+                validSigCount++;
             }
+            recoveredSigners[i] = _signer;
         }
         if (validSigCount < requiredSignatures) revert InvalidSignature();
     }
