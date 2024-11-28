@@ -36,59 +36,19 @@ library CheckSignatures {
         view
         returns (address[] memory recoveredSigners)
     {
-        uint256 requiredSignatureLength = requiredSignatures * 65;
         uint256 signaturesLength = signatures.length;
-        recoveredSigners = new address[](requiredSignatures);
-        if (signaturesLength < requiredSignatureLength) revert InvalidSignature();
-
-        for (uint256 i; i < requiredSignatures; i++) {
+        uint256 totalSignatures = signaturesLength / 65;
+        recoveredSigners = new address[](totalSignatures);
+        if (totalSignatures < requiredSignatures) revert InvalidSignature();
+        uint256 validSigCount;
+        for (uint256 i; i < totalSignatures; i++) {
             // split v,r,s from signatures
             address _signer;
             (uint8 v, bytes32 r, bytes32 s) = signatureSplit({ signatures: signatures, pos: i });
 
             if (v == 0) {
                 // If v is 0 then it is a contract signature
-                // When handling contract signatures the address of the signer contract is encoded
-                // into r
-                _signer = address(uint160(uint256(r)));
-
-                // Check that signature data pointer (s) is not pointing inside the static part of
-                // the signatures bytes
-                // Here we check that the pointer is not pointing inside the part that is being
-                // processed
-                if (uint256(s) < 65 * requiredSignatures) {
-                    revert WrongContractSignatureFormat(uint256(s), 0, 0);
-                }
-
-                if (uint256(s) + 32 > signaturesLength) {
-                    revert WrongContractSignatureFormat(uint256(s), 0, signaturesLength);
-                }
-
-                // Check if the contract signature is in bounds: start of data is s + 32 and end is
-                // start + signature length
-                uint256 contractSignatureLen;
-                // solhint-disable-next-line no-inline-assembly
-                assembly {
-                    contractSignatureLen := mload(add(add(signatures, s), 0x20))
-                }
-                if (uint256(s) + 32 + contractSignatureLen > signaturesLength) {
-                    revert WrongContractSignatureFormat(
-                        uint256(s), contractSignatureLen, signaturesLength
-                    );
-                }
-
-                // Check signature
-                bytes memory contractSignature;
-                // solhint-disable-next-line no-inline-assembly
-                assembly {
-                    // The signature data for contract signatures is appended to the concatenated
-                    // signatures and the offset is stored in s
-                    contractSignature := add(add(signatures, s), 0x20)
-                }
-                if (
-                    ISignatureValidator(_signer).isValidSignature(dataHash, contractSignature)
-                        != EIP1271_MAGIC_VALUE
-                ) revert WrongContractSignature(contractSignature);
+                _signer = isValidContractSignature(dataHash, signatures, r, s, signaturesLength);
             } else if (v > 30) {
                 // If v > 30 then default va (27,28) has been adjusted for eth_sign flow
                 // To support eth_sign and similar we adjust v and hash the messageHash with the
@@ -102,8 +62,62 @@ library CheckSignatures {
             } else {
                 _signer = ECDSA.tryRecover({ hash: dataHash, v: v, r: r, s: s });
             }
+            if (_signer != address(0)) {
+                validSigCount++;
+            }
             recoveredSigners[i] = _signer;
         }
+        if (validSigCount < requiredSignatures) revert InvalidSignature();
+    }
+
+    /**
+     * @notice Validates a contract signature following the ERC-1271 standard
+     * @param dataHash Hash of the data that has been signed
+     * @param signatures The concatenated signatures
+     * @param r Signature r value
+     * @param s Signature s value
+     * @param signaturesLength The length of the signatures
+     */
+    function isValidContractSignature(
+        bytes32 dataHash,
+        bytes memory signatures,
+        bytes32 r,
+        bytes32 s,
+        uint256 signaturesLength
+    )
+        internal
+        view
+        returns (address _signer)
+    {
+        // When handling contract signatures the address of the signer contract is encoded
+        // into r
+        _signer = address(uint160(uint256(r)));
+
+        // Check if the contract signature is in bounds: start of data is s + 32 and end is
+        // start + signature length
+        uint256 contractSignatureLen;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            contractSignatureLen := mload(add(add(signatures, s), 0x20))
+        }
+
+        // Check if the contract signature is in bounds
+        if (contractSignatureLen + uint256(s) + 32 > signaturesLength) {
+            return address(0);
+        }
+
+        // Check signature
+        bytes memory contractSignature;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            // The signature data for contract signatures is appended to the concatenated
+            // signatures and the offset is stored in s
+            contractSignature := add(add(signatures, s), 0x20)
+        }
+        if (
+            ISignatureValidator(_signer).isValidSignature(dataHash, contractSignature)
+                != EIP1271_MAGIC_VALUE
+        ) return address(0);
     }
 
     /**
